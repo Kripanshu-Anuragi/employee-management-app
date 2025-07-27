@@ -1,0 +1,16 @@
+# Ignore virtual env
+.venv/
+venv/
+# Ignore python cache
+__pycache__/
+*.pyc
+# Ignore build artifacts
+build/
+dist/
+*.spec
+# Ignore user/system/IDE files
+*.log
+.DS_Store
+Thumbs.db
+# Ignore SQLite DB if you don't want to share data
+data/emp_data.db
