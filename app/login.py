@@ -5,24 +5,35 @@ from PIL import Image
 from tkinter import messagebox
 
 def resource_path(relative_path: str) -> str:
-    """
-    Get absolute path to resource, works for dev and PyInstaller.
-    Paths are relative to project root (one level up from app folder).
-    """
+    """Get absolute path to resource, works for dev and PyInstaller EXE."""
     try:
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     return os.path.normpath(os.path.join(base_path, relative_path))
 
-# Ensure data folder & user_data.txt exist
-data_dir = resource_path("data")
-os.makedirs(data_dir, exist_ok=True)
+# --- For PERSISTENT USER DATA ---
+def get_user_data_path():
+    """
+    Returns a path where user_data.txt will ALWAYS be persistent,
+    even if built as EXE. EXE: Documents/EmployeeManagementSystem/data/user_data.txt,
+    Script: project-root/data/user_data.txt
+    """
+    if getattr(sys, 'frozen', False):
+        docs_folder = os.path.join(os.path.expanduser('~'), "Documents", "EmployeeManagementSystem", "data")
+        os.makedirs(docs_folder, exist_ok=True)
+        return os.path.join(docs_folder, "user_data.txt")
+    else:
+        data_dir = resource_path("data")
+        os.makedirs(data_dir, exist_ok=True)
+        return os.path.join(data_dir, "user_data.txt")
 
-user_data_path = resource_path("data/user_data.txt")
+user_data_path = get_user_data_path()
+
+# --- On first run, make sure user_data.txt exists with default user ---
 if not os.path.exists(user_data_path) or os.stat(user_data_path).st_size == 0:
     with open(user_data_path, "w") as f:
-        f.write("Kripanshu,DataScientist30LPA")
+        f.write("Kripanshu,admin123")
 
 login_window = CTk()
 window_width = 930
@@ -77,7 +88,7 @@ def login():
     try:
         with open(user_data_path, "r") as f:
             data = f.read().strip()
-            saved_user, saved_pass = data.split(",")
+            saved_user, saved_pass = data.split(",", 1)
     except Exception:
         saved_user, saved_pass = 'Kripanshu', 'DataScientist30LPA'
 
@@ -100,18 +111,18 @@ login_button = CTkButton(login_window, text="Login", cursor="hand2", command=log
                          fg_color="#2C3E50", hover_color="#1D4ED8", text_color="white", corner_radius=0)
 login_button.place(x=680, y=250)
 
-# Optional Signup Window
 def open_signup_window():
     login_window.signup_window = CTkToplevel(login_window)
     signup_window = login_window.signup_window
     sw, sh = 400, 380
+    screen_width = login_window.winfo_screenwidth()
+    screen_height = login_window.winfo_screenheight()
     sx = int((screen_width / 2) - (sw / 2))
     sy = int((screen_height / 2) - (sh / 2))
     signup_window.geometry(f"{sw}x{sh}+{sx}+{sy}")
     signup_window.title("Sign Up")
     signup_window.resizable(0, 0)
     signup_window.grab_set()
-
     login_button.configure(state="disabled")
 
     def signup_window_close():
@@ -146,7 +157,7 @@ def open_signup_window():
             with open(user_data_path, "r") as f:
                 data = f.read().strip()
                 if data:
-                    stored_user, stored_pass = data.split(",")
+                    stored_user, stored_pass = data.split(",", 1)
                 else:
                     stored_user, stored_pass = 'Kripanshu', 'DataScientist30LPA'
         except Exception:
